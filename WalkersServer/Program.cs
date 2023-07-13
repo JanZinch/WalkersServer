@@ -9,15 +9,12 @@ namespace WalkersServer
             var builder = WebApplication.CreateBuilder(args);
             builder.Services.AddSignalR();
             
-            Console.WriteLine("Start MSG");
-            
             var app = builder.Build();
-
-            app.MapGet("/", () => "Hello Ivan!");
+            
             app.MapHub<WalkersHub>("/WalkersHub");
+            app.MapGet("/", () => "Walkers server");
             
             app.Run();
-            
         }  
   
     }

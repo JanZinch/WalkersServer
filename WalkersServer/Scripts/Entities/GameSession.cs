@@ -1,4 +1,5 @@
-﻿using WalkersServer.Scripts.Core;
+﻿using System.Diagnostics.Contracts;
+using WalkersServer.Scripts.Core;
 using WalkersServer.Scripts.Factories;
 
 namespace WalkersServer.Scripts.Entities;
@@ -10,7 +11,7 @@ public class GameSession
     private LinkedList<Player> _players = new LinkedList<Player>();
     private GamePathFactory _pathFactory = null;
 
-    public event Action<int> OnPlayersCountChanged;
+    public event Action<GameSession, int> OnPlayersCountChanged;
     
     public GameSession(Player host, out string sessionId)
     {
@@ -33,7 +34,7 @@ public class GameSession
         if (_state == GameSessionState.Lobby)
         {
             _players.AddLast(player);
-            OnPlayersCountChanged?.Invoke(_players.Count);
+            OnPlayersCountChanged?.Invoke(this, _players.Count);
             return true;
         }
         else
@@ -47,13 +48,26 @@ public class GameSession
         if (_state == GameSessionState.Lobby)
         {
             _players.Remove(player);
-            OnPlayersCountChanged?.Invoke(_players.Count);
+            OnPlayersCountChanged?.Invoke(this, _players.Count);
             return true;
         }
         else
         {
             return false;
         }
+    }
+
+    [Pure]
+    public List<string> GetAllPlayerIds()
+    {
+        List<string> idsOutput = new List<string>(_players.Count);
+
+        foreach (Player player in _players)
+        {
+            idsOutput.Add(player.Id);
+        }
+
+        return idsOutput;
     }
 
     public List<GamePathNode> Start()

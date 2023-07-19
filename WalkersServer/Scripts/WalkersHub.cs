@@ -2,44 +2,37 @@
 using WalkersServer.Scripts.Core;
 using WalkersServer.Scripts.Core.DataModels;
 using WalkersServer.Scripts.Entities;
+using WalkersServer.Scripts.Extensions;
 using WalkersServer.Scripts.Factories;
 
 namespace WalkersServer.Scripts;
 
 public class WalkersHub : Hub
 {
-    private LinkedList<ConnectionGroup> _connectionGroups = new LinkedList<ConnectionGroup>();
-
-    public void CreateGameSessionI()
-    {
-        Console.WriteLine("I: debug");
-    }
-
+    private readonly LinkedList<GameSession> _gameSessions = new LinkedList<GameSession>();
+    
     public void CreateGameSession(PlayerDataModel hostModel)
     {
-        Console.WriteLine("Create GS");
-
         Player host = new Player(hostModel);
-        
         GameSession gameSession = new GameSession(host, out string gameSessionId);
-        
-        ConnectionGroup connectionGroup = new ConnectionGroup(Context.ConnectionId, gameSession);
-        connectionGroup.OnPlayersCountChanged += OnPlayersCountChanged;
-        _connectionGroups.AddLast(connectionGroup);
+        gameSession.OnPlayersCountChanged += OnPlayersCountChanged;
+        _gameSessions.AddLast(gameSession);
 
-        Clients.Client(Context.ConnectionId).SendAsync("OnGameSessionCreated", gameSessionId);
+        Clients.Client(hostModel.Id).SendAsync("OnGameSessionCreated", gameSessionId);
+        
+        Console.WriteLine("Created session: " + gameSessionId);
     }
 
-    private void OnPlayersCountChanged(ConnectionGroup connectionGroup, int playersCount)
+    private void OnPlayersCountChanged(GameSession gameSession, int playersCount)
     {
         if (playersCount > 1)
         {
-            List<GamePathNode> gamePath = connectionGroup.LinkedSession.Start();
-            Clients.Clients(connectionGroup.GetConnectionIds()).SendAsync("OnGameSessionStarted", gamePath);
+            List<GamePathNode> gamePath = gameSession.Start();
+            Clients.Clients(gameSession.GetAllPlayerIds()).SendAsync("OnGameSessionStarted", gamePath.ToDataModel());
         }
         else
         {
-            Clients.Clients(connectionGroup.GetConnectionIds()).SendAsync("OnPlayersCountChanged", playersCount);
+            Clients.Clients(gameSession.GetAllPlayerIds()).SendAsync("OnPlayersCountChanged", playersCount);
         }
     }
 

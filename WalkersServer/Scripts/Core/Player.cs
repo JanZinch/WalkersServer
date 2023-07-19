@@ -13,4 +13,13 @@ public class Player
         Role = dataModel.Role;
     }
 
+    public PlayerDataModel ToDataModel()
+    {
+        return new PlayerDataModel()
+        {
+            Id = Id,
+            Role = Role,
+        };
+    }
+
 }

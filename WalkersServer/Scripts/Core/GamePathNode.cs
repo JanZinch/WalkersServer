@@ -1,4 +1,6 @@
-﻿namespace WalkersServer.Scripts.Core;
+﻿using WalkersServer.Scripts.Core.DataModels;
+
+namespace WalkersServer.Scripts.Core;
 
 public class GamePathNode
 {
@@ -25,6 +27,18 @@ public class GamePathNode
     public void UnsetPlayer(Player player)
     {
         Players.Remove(player);
+    }
+
+    public GamePathNodeDataModel ToDataModel()
+    {
+        return new GamePathNodeDataModel()
+        {
+            Index = Index,
+            BypassTargetIndex = BypassTargetIndex,
+            Bonus = Bonus,
+            Players = Players.Select(player => player.ToDataModel()).ToArray(),
+        };
+
     }
 
 }
